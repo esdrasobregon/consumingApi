@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package javaapplication2;
+package entity;
 
 import java.util.Date;
 
@@ -10,16 +10,16 @@ import java.util.Date;
  *
  * @author esdra
  */
-public class unidades {
+public class Unidades {
 
     int idbus, modelo, activo, tipo;
     String marca, placa;
     Date fecha_ingreso;
 
-    public unidades() {
+    public Unidades() {
     }
 
-    public unidades(int idbus, int modelo, int activo, int tipo, String marca, String placa, Date fecha_ingreso) {
+    public Unidades(int idbus, int modelo, int activo, int tipo, String marca, String placa, Date fecha_ingreso) {
         this.idbus = idbus;
         this.modelo = modelo;
         this.activo = activo;

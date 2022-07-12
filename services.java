@@ -1,9 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
-package javaapplication2;
 
+import entity.Unidades;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,20 +9,19 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
 /**
  *
  * @author esdra
  */
-public class JavaApplication2 {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        getAllUnidFromApi();
-    }
-    public static ArrayList<unidades> getAllUnidFromApi() {
-        ArrayList<unidades> lista = new ArrayList<>();
+public class services {
+    
+    public static ArrayList<Unidades> getAllUnidFromApi() {
+        ArrayList<Unidades> lista = new ArrayList<>();
         try {
             URL url = new URL("http://localhost:8180/ApiTest01/webresources/unidades/unidadJson");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -53,4 +48,5 @@ public class JavaApplication2 {
 
         return lista;
     }
+    
 }
