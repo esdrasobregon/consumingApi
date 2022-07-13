@@ -23,7 +23,7 @@ public class MantenimientoUnidades extends javax.swing.JFrame {
     public MantenimientoUnidades() {
         initComponents();
         servicesUnidades serv = new servicesUnidades();
-        serv.sendData();
+        serv.Post_JSON01();
         this.listaUn = serv.getAllUnidFromApi();
         for (int i = 0; i < this.listaUn.size(); i++) {
             addRowToUnidades(listaUn.get(i));
