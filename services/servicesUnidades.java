@@ -5,6 +5,8 @@
 package services;
 
 import entity.Unidades;
+import entity.Usuario;
+import entity.apiCode;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,7 +34,7 @@ import org.apache.commons.io.IOUtils;
  */
 public class servicesUnidades {
 
-    public static ArrayList<Unidades> getAllUnidFromApi() {
+    public ArrayList<Unidades> getAllUnidFromApi() {
         ArrayList<Unidades> lista = new ArrayList<>();
         try {
             URL url = new URL("http://localhost:8180/ApiTest01/webresources/unidades/unidadJson");
@@ -54,6 +56,7 @@ public class servicesUnidades {
                 JSONArray dataObject = (JSONArray) parser.parse(String.valueOf(informationString));
                 for (int i = 0; i < dataObject.size(); i++) {
                     JSONObject obj = (JSONObject) dataObject.get(i);
+                    //JOptionPane.showMessageDialog(null, obj.toString());
                     lista.add(getUnidadFromJson(obj));
                 }
                 conn.disconnect();
@@ -61,7 +64,7 @@ public class servicesUnidades {
             }
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e.getMessage());
+            JOptionPane.showMessageDialog(null, "error: " + e.getMessage());
             return lista;
         }
     }
@@ -135,17 +138,75 @@ public class servicesUnidades {
         return lista;
     }
 
-    public void Post_JSON01() {
-        String query_url = "http://localhost:8180/ApiTest01/webresources/unidades/addProductos";
-        //String json = "{ \"method\" : \"guru.test\", \"params\" : [ \"jinu awad\" ], \"id\" : 123 }";
+    private Usuario sendLoginRequest(HttpURLConnection con) {
+        Usuario result = new Usuario();
+        try {
+            int responseCode = con.getResponseCode();
+            System.out.println("POST Response Code :: " + responseCode);
+
+            if (responseCode == HttpURLConnection.HTTP_OK) { //success
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        con.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                JSONParser parser = new JSONParser();
+                JSONArray dataObject = (JSONArray) parser.parse(String.valueOf(response));
+                JSONObject json = (JSONObject) dataObject.get(0);
+                apiCode code = getApiCodeFromJson(json);
+                if (code.isAccepted()) {
+                    result = getJsonUserFromJsonString(dataObject.get(1).toString());
+                }else{
+                    result = null;
+                }
+
+                in.close();
+                return result;
+            } else {
+                System.out.println("POST request not worked");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+        }
+        return result;
+    }
+
+    private Usuario getJsonUserFromJsonString(String us) {
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(us);
+            Usuario un = new Usuario();
+            un.setNombreUsuario(json.get("nombreUsuario").toString());
+            un.setContrasenya(json.get("contrasenya").toString());
+            return un;
+        } catch (Exception e) {
+            System.out.println("error: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private JSONObject getJsonUnidadToPost(Unidades un) {
         JSONObject json = new JSONObject();
         //obj.put("idBus", lista.get(i).getIdbus());
-        json.put("fecha_ingreso", new Date().toString());
-        json.put("modelo", 5555);
-        json.put("placa", "5252");
-        json.put("marca", "lopes");
-        json.put("tipo", 2);
-        json.put("estado", 0);
+        json.put("fecha_ingreso", un.getFecha_ingreso().toString());
+        json.put("modelo", un.getModelo());
+        json.put("placa", un.getModelo());
+        json.put("marca", un.getMarca());
+        json.put("tipo", un.getTipo());
+        json.put("estado", un.getActivo());
+        return json;
+    }
+
+    public void Post_JSON01(Usuario us, Unidades un) {
+        String query_url = "http://localhost:8180/ApiTest01/webresources/unidades/addProductos";
+        //String json = "{ \"method\" : \"guru.test\", \"params\" : [ \"jinu awad\" ], \"id\" : 123 }";
+        JSONObject json = getJsonUnidadToPost(un);
+        JSONArray jsonData = new JSONArray();
+        jsonData.add(getJsonUserToPost(us));
+        jsonData.add(json);
         try {
             URL url = new URL(query_url);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -155,7 +216,7 @@ public class servicesUnidades {
             conn.setDoInput(true);
             conn.setRequestMethod("POST");
             OutputStream os = conn.getOutputStream();
-            os.write(json.toString().getBytes("UTF-8"));
+            os.write(jsonData.toString().getBytes("UTF-8"));
             os.close();
             // read the response
             ArrayList<Unidades> lista = sendRequest(conn);
@@ -168,20 +229,80 @@ public class servicesUnidades {
         }
     }
 
-    public static Unidades getUnidadFromJson(JSONObject obj) throws ParseException {
+    public Usuario login(Usuario us) {
+        String query_url = "http://localhost:8180/ApiTest01/webresources/unidades/login";
+        //String json = "{ \"method\" : \"guru.test\", \"params\" : [ \"jinu awad\" ], \"id\" : 123 }";
+        JSONObject json = getJsonUserToPost(us);
+        Usuario currentUsser = new Usuario();
+        try {
+            URL url = new URL(query_url);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod("POST");
+            OutputStream os = conn.getOutputStream();
+            os.write(json.toString().getBytes("UTF-8"));
+            os.close();
+            // read the response
+            currentUsser = sendLoginRequest(conn);
+            conn.disconnect();
+            return currentUsser;
+        } catch (Exception e) {
+            System.out.println(e);
+            return null;
+        }
+    }
+
+    public static Unidades getUnidadFromJson(JSONObject obj) {
         //System.out.println(obj.toString());
         Unidades un = new Unidades();
-        un.setIdbus(Integer.parseInt(obj.get("idBus").toString()));
-        String pattern = "yyyy-MM-dd";
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-        Date date = simpleDateFormat.parse(obj.get("fecha_ingreso").toString());
-        un.setFecha_ingreso(date);
-        un.setMarca(obj.get("marca").toString());
-        un.setActivo(Integer.parseInt(obj.get("estado").toString()));
-        un.setTipo(Integer.parseInt(obj.get("tipo").toString()));
-        un.setModelo(Integer.parseInt(obj.get("modelo").toString()));
-        un.setPlaca(obj.get("placa").toString());
-        return un;
+        try {
+            un.setIdbus(Integer.parseInt(obj.get("idBus").toString()));
+            String pattern = "yyyy-MM-dd";
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+            Date date = simpleDateFormat.parse(obj.get("fecha_ingreso").toString());
+            un.setFecha_ingreso(date);
+            un.setMarca(obj.get("marca").toString());
+            un.setActivo(Integer.parseInt(obj.get("estado").toString()));
+            un.setTipo(Integer.parseInt(obj.get("tipo").toString()));
+            un.setModelo(Integer.parseInt(obj.get("modelo").toString()));
+            un.setPlaca(obj.get("placa").toString());
+            return un;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            return null;
+        }
+    }
+
+    private JSONObject getJsonUserToPost(Usuario us) {
+        JSONObject json = new JSONObject();
+        //obj.put("idBus", lista.get(i).getIdbus());
+        json.put("usser", us.getNombreUsuario());
+        json.put("contrasenya", us.getContrasenya());
+        return json;
+    }
+
+    private JSONObject getJsonResponseCode(boolean response) {
+        JSONObject json = new JSONObject();
+        //obj.put("idBus", lista.get(i).getIdbus());
+        json.put("accepted", response);
+        json.put("message", "accepted");
+        return json;
+    }
+
+    public static apiCode getApiCodeFromJson(JSONObject obj) {
+
+        try {
+            apiCode un = new apiCode();
+            un.setAccepted(Boolean.parseBoolean(obj.get("accepted").toString()));
+            un.setMessage(obj.get("message").toString());
+            return un;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            return null;
+        }
     }
 
 }
