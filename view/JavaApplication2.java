@@ -24,8 +24,8 @@ public class JavaApplication2 {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        MantenimientoUnidades mant = new MantenimientoUnidades();
+        loginFrame mant = new loginFrame();
         mant.setVisible(true);
     }
-    
+
 }
